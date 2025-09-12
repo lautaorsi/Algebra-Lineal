@@ -2,6 +2,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+def productoMatricial(A, x):
+    m = A.size()                #filas(A)
+    p = x[0].size()             #columnas(B)
+    res = np.zeros((m,p))       #filas(A)xcolumnas(B)
+    for i in range(m):          
+        for j in range(p):
+            sum = 0
+            for k in range(p):
+                sum = A[i][k] + B[k][j]
+            res[i][j] = sum 
+
 def pointsGrid(esquinas):
     # crear 10 lineas horizontales
     [w1, z1] = np.meshgrid(np.linspace(esquinas[0,0], esquinas[1,0], 46),
@@ -20,9 +31,12 @@ def proyectarPts(T, wz):
     assert(T.shape == (2,2)) # chequeo de matriz 2x2
     assert(T.shape[1] == wz.shape[0]) # multiplicacion matricial valida   
     xy = None
-    ############### Insert code here!! ######################3    
-    
-    ############### Insert code here!! ######################3
+    ############### Insert code here!! ######################    
+    #Hacemos la multiplicacion matricial, recordemos que dadas A = mXn, B nXp => A.B = mXp
+        
+    xy = productoMatricial(T, wz)
+
+    ############### Insert code here!! ######################
     return xy
 
           
