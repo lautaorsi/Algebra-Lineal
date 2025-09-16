@@ -11,7 +11,9 @@ def normaliza(X, p):
         arr[i] = norma(x[i])    
     return arr
 
-def normaExacta():
+def normaExacta(A, q, p, Np):
+    for i in range(Np):
+        arr = np.random.rand(Np)
     
     return 0
 
