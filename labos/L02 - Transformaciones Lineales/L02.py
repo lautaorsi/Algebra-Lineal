@@ -1,15 +1,6 @@
 import numpy as np
 
-def productoMatricial(A, x):
-    m = len(A)                #filas(A)
-    p = len(x[0])             #columnas(B)
-    res = np.zeros((m,p))       #filas(A)xcolumnas(B)
-    for i in range(m):          
-        for j in range(p):
-            sum = 0
-            for k in range(p):
-                sum = A[i][k] + x[k][j]
-            res[i][j] = sum 
+
 
 
 def rota(theta):
