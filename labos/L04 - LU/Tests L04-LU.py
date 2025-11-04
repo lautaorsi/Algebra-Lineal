@@ -1,6 +1,7 @@
 import numpy as np
 # Tests L04-LU
 
+
 def calculaLU(A):
     print(A)
     cant_op = 0
@@ -16,7 +17,7 @@ def calculaLU(A):
 
     for i in range(m):
         if np.linalg.det(A) == 0:            ##TODO: CALCULAR DETERMINANTE DE SUS SUBMATRICES PRINCIPALES
-            return None, None, 0
+            return None, None, None
 
 
     L = np.zeros((m,n))
@@ -40,30 +41,29 @@ def calculaLU(A):
                 
     ## hasta aqui, calculando L, U y la cantidad de operaciones sobre 
     ## la matriz Ac
+            
+    print(L)
+    print(U)
+    print(cant_op)
     return L, U, cant_op
 
 def res_tri(L,b,inferior=True):
+    print("asd")
     filasL = L.shape[0]
     res = np.zeros(filasL)
-    print("es inferior: ", inferior)
     if inferior:
         for i in range(filasL):
             res[i] = b[i]
             for j in range(i):
-                res[i] -= L[i][j] * res[j]
-            res[i] /= L[i][i]
+                res[i] -= L[j] * res[j] 
     else:
-        for i in range(filasL-1, -1, -1):       #Aca si filasL vale 3 entonces el for va 2,1,0. Hace (Desde, hasta, step) sin incluir hasta e incluyendo desde 
-            res[i] = b[i]
-            for j in range(filasL-1, i, -1):
-                print(j)
-                res[i] -= (L[i][j] * res[j])
-            res[i] /= L[i][i]
-    print(res)
-    return res
 
-def inversa(A):
-    
+        for i in range(filasL, 0):
+            
+            res[i] = b[i]
+            for j in range(i):
+                res[i] -= L[j] * res[j]     
+
 
 def main():
 

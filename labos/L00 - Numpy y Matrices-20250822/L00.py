@@ -47,9 +47,10 @@ def traza(matriz):
     return res
 
 def traspuesta(matriz):
-    nueva_matriz = np.zeros(matriz.shape)
-    for i in range(matriz.shape[0]):
-        for j in range(matriz.shape[0]):
+    nueva_matriz = copy.deepcopy(matriz)
+    for i in range(len(matriz)):
+        for j in range(len(matriz[i])):
+            print(f"{i} {j} {matriz[i][j]}")
             nueva_matriz[j][i] = matriz[i][j]
     return nueva_matriz
 
