@@ -39,7 +39,18 @@ def tolerar(x, tol):
             x[i] = 0
     return x
     
-        
+def subVector(v, k, m):         #Dado un vector de Nx1 y dos indices retorna el vector desde k hasta m (incluidos ambos)
+    subvector = np.zeros((1,m-k+1))
+    for i in range(k, m+1):
+        subvector[0][i-k] = v[i]
+    return subvector
+
+def sign(x):
+    if (x < 0):
+        return -1
+    if (x > 0):
+        return 1
+    return 0
 
 
 ### Funciones L05-QR
@@ -57,39 +68,32 @@ def QR_con_GS(A,tol=1e-12,retorna_nops=False):
 
     #Me parece mas facil trabajar sobre filas en vez de columnas,
     #entonces podemos hacer toda la descomp sobre At (A traspuesta) en vez de A
-    #pero OJO, porque si A = QR => At = (QR)t = Rt Qt 
-    #entonces lo que estamos calculando en realidad esta invertido y vamos a tener que intercambiar Q por R cuando terminemos 
+    #pero OJO, porque Q lo voy a escribir en filas tambien, entonces tenemos que trasponerlo nuevamente
     A = traspuesta(A)
-    Qt = np.zeros(A.shape)
-    Rt = np.zeros(A.shape)
+    Q = np.zeros(A.shape)
+    R = np.zeros(A.shape)
     nops = 0
     
-    Rt[0][0] = tolerar(norma(A[0],2),tol)
+    R[0][0] = tolerar(norma(A[0],2),tol)
 
-    Qt[0] = A[0] / Rt[0][0]
+    Q[0] = A[0] / R[0][0]
     
 
     for j in range(1, A.shape[0]):    
         temp = A[j].copy()
         for k in range(j):
-            Rt[k][j] = tolerar(multiplicacionVectorial(Qt[k],temp),tol)
-            temp -= Rt[k][j] * Qt[k]
+            R[k][j] = tolerar(multiplicacionVectorial(Q[k],temp),tol)
+            temp -= R[k][j] * Q[k]
         
-        Rt[j][j] = tolerar(norma(temp, 2),tol)
-        Qt[j] = temp / Rt[j][j]
-        
-    
-    
-    Q = Qt
-    R = Rt
+        R[j][j] = tolerar(norma(temp, 2),tol)
+        Q[j] = temp / R[j][j]    
+
+    Q = traspuesta(Q)
     
     if(retorna_nops):
         return Q,R,nops
     else:
         return Q,R
-
-
-
 
 def QR_con_HH(A,tol=1e-12):
     """
@@ -98,6 +102,37 @@ def QR_con_HH(A,tol=1e-12):
     retorna matrices Q y R calculadas con reflexiones de Householder
     Si la matriz A no cumple m>=n, debe retornar None
     """
+
+    m = A.shape[0]
+    n = A.shape[1] 
+
+    if(m < n):
+        return None
+    
+    R = A
+    Q = np.eye(m,m)
+
+    for k in range(n):
+        x = subVector(R[:,k], k, m-1)           #x es un vector columna
+        
+        alfa = -sign(x[0][0]) * norma(x, 2)
+
+        u = x - alfa * (np.eye(0,m-k))
+        
+        if(norma(u, 2) > tol):
+            u = u / norma(u, 2)
+            
+            H[:,k] = np.eye(m-k+1, m-k+1) - 2 * multiplicacionVectorial(u,u)
+            
+            extH = armarExtI(H,k)
+
+            R = multiplicacionMatricial(extH,R)
+
+            Q = multiplicacionMatricial(Q,traspuesta(extH))
+
+              
+    return Q,R
+
 def calculaQR(A,metodo='RH',tol=1e-12):
     """
     A una matriz de n x n 
@@ -110,7 +145,6 @@ def calculaQR(A,metodo='RH',tol=1e-12):
 # Tests L05-QR:
 
 import numpy as np
-
 
 # --- Matrices de prueba ---
 A2 = np.array([[1., 2.],
@@ -127,7 +161,6 @@ A4 = np.array([[2., 0., 1., 3.],
 
 # --- Funciones auxiliares para los tests ---
 def check_QR(Q,R,A,tol=1e-10):
-    print("reconstruccion: ", Q@R, A)
     # Comprueba ortogonalidad y reconstrucción
     assert np.allclose(Q.T @ Q, np.eye(Q.shape[1]), atol=tol)
     assert np.allclose(Q @ R, A, atol=tol)
@@ -142,15 +175,15 @@ check_QR(Q3,R3,A3)
 Q4,R4 = QR_con_GS(A4)
 check_QR(Q4,R4,A4)
 
-# # --- TESTS PARA QR_by_HH ---
-# Q2h,R2h = QR_con_GS(A2)
-# check_QR(Q2h,R2h,A2)
+# --- TESTS PARA QR_by_HH ---
+Q2h,R2h = QR_con_GS(A2)
+check_QR(Q2h,R2h,A2)
 
-# Q3h,R3h = QR_con_HH(A3)
-# check_QR(Q3h,R3h,A3)
+Q3h,R3h = QR_con_HH(A3)
+check_QR(Q3h,R3h,A3)
 
-# Q4h,R4h = QR_con_HH(A4)
-# check_QR(Q4h,R4h,A4)
+Q4h,R4h = QR_con_HH(A4)
+check_QR(Q4h,R4h,A4)
 
 # # --- TESTS PARA calculaQR ---
 # Q2c,R2c = calculaQR(A2,metodo='RH')
