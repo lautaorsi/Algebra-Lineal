@@ -129,8 +129,7 @@ def QR_con_HH(A,tol=1e-12):
             R = multiplicacionMatricial(extH,R)
 
             Q = multiplicacionMatricial(Q,traspuesta(extH))
-
-              
+    
     return Q,R
 
 def calculaQR(A,metodo='RH',tol=1e-12):
@@ -141,6 +140,14 @@ def calculaQR(A,metodo='RH',tol=1e-12):
     retorna matrices Q y R calculadas con Gram Schmidt (y como tercer argumento opcional, el numero de operaciones)
     Si el metodo no esta entre las opciones, retorna None
     """
+
+    if(metodo == 'RH'):
+        return QR_con_HH(A,tol)
+    if(metodo == 'GS'):
+        return QR_con_GS(A,tol)
+    
+    return None
+
 
 # Tests L05-QR:
 
@@ -186,11 +193,11 @@ Q4h,R4h = QR_con_HH(A4)
 check_QR(Q4h,R4h,A4)
 
 # # --- TESTS PARA calculaQR ---
-# Q2c,R2c = calculaQR(A2,metodo='RH')
-# check_QR(Q2c,R2c,A2)
+Q2c,R2c = calculaQR(A2,metodo='RH')
+check_QR(Q2c,R2c,A2)
 
-# Q3c,R3c = calculaQR(A3,metodo='GS')
-# check_QR(Q3c,R3c,A3)
+Q3c,R3c = calculaQR(A3,metodo='GS')
+check_QR(Q3c,R3c,A3)
 
-# Q4c,R4c = calculaQR(A4,metodo='RH')
-# check_QR(Q4c,R4c,A4)
+Q4c,R4c = calculaQR(A4,metodo='RH')
+check_QR(Q4c,R4c,A4)

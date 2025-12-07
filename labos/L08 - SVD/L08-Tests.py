@@ -15,6 +15,7 @@ def svd_reducida(A,k="max",tol=1e-15):
     r = min(rango(A),minimo)    
 
     
+    
 
     raise NotImplementedError("Implementar svd_reducida!")
 

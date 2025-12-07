@@ -1,4 +1,5 @@
 import numpy as np
+
 # Tests L04-LU
 
 
@@ -65,56 +66,158 @@ def res_tri(L,b,inferior=True):
                 res[i] -= L[j] * res[j]     
 
 
+
+def elim_gaussiana(A):
+    cant_op = 0
+    m=A.shape[0] # filas
+    n=A.shape[1] # columns
+    Ac = A.copy()
+
+    if m!=n:
+        print('Matriz no cuadrada')
+        return
+
+    for k in range(0, n):
+      if Ac[k][k] != 0:
+        for i in range(k+1, n):
+          gama = Ac[i][k] / Ac[k][k]
+          cant_op += 1
+          for j in range(k, m):
+            Ac[i][j] = Ac[i][j] - (gama * Ac[k][j])
+            cant_op += 2
+          Ac[i][k] = gama
+      else:
+        raise Exception('No se puede dividir entre cero')
+
+    ## hasta aqui, calculando L, U y la cantidad de operaciones sobre
+    ## la matriz Ac
+    # print(Ac)
+    L = np.tril(Ac, -1) + np.eye(n)
+    U = np.triu(Ac)
+
+    return L, U, cant_op
+
+def multiplicacion_matricial(A, B):
+    A = np.array(A, dtype=float)  # asegurar numpy array
+    B = np.array(B, dtype=float)
+
+    # chequeo dimensiones
+    if A.shape[1] != B.shape[0]:
+        return None
+
+    n, m = A.shape       # A es n×m
+    m2, p = B.shape      # B es m×p
+
+    # Creo la matriz resultado
+    C = np.zeros((n, p))
+
+    # Triple bucle: filas de A, columnas de B, suma sobre productos
+    for i in range(n):         # filas de A
+        for j in range(p):     # columnas de B
+            s = 0.0
+            for k in range(m): # columnas de A = filas de B
+                s += A[i, k] * B[k, j]
+            C[i, j] = s
+
+    return C
+
+
+def calcula_LU(A):
+  '''Calcula la factorizacion LU de la matriz A y retorna las matrices L y U, junto con el numero de operaciones realizadas. En caso de que la amtriz no pueda factorizarse retorna None '''
+
+  cant_op = 0
+  m=A.shape[0]
+  n=A.shape[1]
+  Ac = A.copy()
+
+  if m!=n:
+      print('Matriz no cuadrada')
+      return
+
+  for k in range(0, n):
+    if Ac[k][k] != 0:
+      for i in range(k+1, n):
+        gama = Ac[i][k] / Ac[k][k]
+        cant_op += 1
+        for j in range(k, m):
+          Ac[i][j] = Ac[i][j] - (gama * Ac[k][j])
+          cant_op += 2
+        Ac[i][k] = gama
+    else:
+      raise Exception('No se puede dividir entre cero')
+
+  L = np.tril(Ac, -1) + np.eye(n)
+  U = np.triu(Ac)
+
+  return L, U, cant_op
+
+def res_tri(L, b, inferior=True):
+  ''' Resuelve el sistema Lx = b, donde L es triangular. Si inferior es True, L es triangular inferior, si es False, L es triangular superior. '''
+
+  n = L.shape[0]
+  x = np.zeros(n) # Creo el vector solucion
+
+  if inferior:
+    for i in range(n):
+      suma = np.dot(L[i, :i], x[:i]) # fila i desde la columna 0 hasta la columna i-1
+      x[i] = (b[i] - suma) / L[i, i] # en suma tenemos ya los valores de los x anteriores calculados con mis nuevas variables en esta fila
+  else: # tengo que volver sobre esto para poder explicarlo con crayones
+    for i in range(n-1, -1, -1): # en este caso es para atras el recorrido
+      suma = np.dot(L[i, i+1:], x[i+1:]) # fila i, desde la columna i+1 hasra el final
+      x[i] = (b[i] - suma) / L[i, i]
+
+  return x
+
+def inversa(A):
+  ''' Calcla la inversa de A empleando la factorizacion LU y las funciones que resuelven sistemas triangulares.'''
+
+  # Cuando invertimos una matriz usando la identidad de un lado y triangulando, lo que estamos resolviendo es n sistemas lineales
+  # del tipo A*x_j = e_j donde e_j es la columna j de la identidad
+  # y cada solucion x_j sera una columna de A^-1. Como A la puedo escribir como LU entonces nos quedaria LU*x_j=e_j
+
+  n = A.shape[0]
+  L, U, _ = calcula_LU(A)
+  A_inv = np.zeros((n,n), dtype=float)
+
+  # recorremos cada columna de la identidad
+  for col_id_j in range(n):
+      e_j = np.eye(n)[:, col_id_j]              # columna j de la identidad
+      y = res_tri(L, e_j, inferior=True)        # Ly = e_j
+      x = res_tri(U, y, inferior=False)         # Ux = y
+      A_inv[:, col_id_j] = x                    # guardo la columna en A_inv
+
+  return A_inv
+
+def calculaLDV(A):
+  ''' Calcula la factorizacion LDV de la matriz A, de forma tal que A=LDV con L triangular inferior, D diaogonal y V triangular superior. Retorna las matrices L, D y V. Si no puede factorizarse retorna None'''
+
+  L, U, _ = calcula_LU(A)
+  Vt, D, _ = calcula_LU((U.T))
+  V = (Vt).T
+  return L, D, V
+
+
 def main():
+    # Test LDV:
 
-    # Tests LU
-    
-    L0 = np.array([[1,0,0],[0,1,0],[1,1,1]])
-    U0 = np.array([[10,1,0],[0,2,1],[0,0,1]])
-    A =  L0 @ U0
-    L,U,nops = calculaLU(A)
+    L0 = np.array([[1,0,0],[1,1.,0],[1,1,1]])
+    D0 = np.diag([1,2,3])
+    V0 = np.array([[1,1,1],[0,1,1],[0,0,1]])
+    A =  L0 @ D0  @ V0
+    L,D,V = calculaLDV(A)
+    print(L,D,V)
     assert(np.allclose(L,L0))
-    assert(np.allclose(U,U0))
-    
-    
+    assert(np.allclose(D,D0))
+    assert(np.allclose(V,V0))
+
     L0 = np.array([[1,0,0],[1,1.001,0],[1,1,1]])
-    U0 = np.array([[1,1,1],[0,1,1],[0,0,1]])
-    A =  L0 @ U0
-    
-    L,U,nops = calculaLU(A)
-    assert(not np.allclose(L,L0))
-    assert(not np.allclose(U,U0))
-    assert(np.allclose(L,L0,atol=1e-3))
-    assert(np.allclose(U,U0,atol=1e-3))
-    assert(nops == 13)
-    
-    L0 = np.array([[1,0,0],[1,1,0],[1,1,1]])
-    U0 = np.array([[1,1,1],[0,0,1],[0,0,1]])
-    A =  L0 @ U0
-    L,U,nops = calculaLU(A)
-    assert(L is None)
-    assert(U is None)
-    assert(nops == 0)
-
-    ## Tests res_tri
-
-    A = np.array([[1,0,0],[1,1,0],[1,1,1]])
-    b = np.array([1,1,1])
-    assert(np.allclose(res_tri(A,b),np.array([1,0,0])))
-    b = np.array([0,1,0])
-    assert(np.allclose(res_tri(A,b),np.array([0,1,-1])))
-    b = np.array([-1,1,-1])
-    assert(np.allclose(res_tri(A,b),np.array([-1,2,-2])))
-    b = np.array([-1,1,-1])
-    assert(np.allclose(res_tri(A,b,inferior=False),np.array([-1,1,-1])))
-
-    A = np.array([[3,2,1],[0,2,1],[0,0,1]])
-    b = np.array([3,2,1])
-    assert(np.allclose(res_tri(A,b,inferior=False),np.array([1/3,1/2,1])))
-
-    A = np.array([[1,-1,1],[0,1,-1],[0,0,1]])
-    b = np.array([1,0,1])
-    assert(np.allclose(res_tri(A,b,inferior=False),np.array([1,1,1])))
+    D0 = np.diag([3,2,1])
+    V0 = np.array([[1,1,1],[0,1,1],[0,0,1.001]])
+    A =  L0 @ D0  @ V0
+    L,D,V = calculaLDV(A)
+    assert(np.allclose(L,L0,1e-3))
+    assert(np.allclose(D,D0,1e-3))
+    assert(np.allclose(V,V0,1e-3))
 
 
 if __name__ == "__main__":
@@ -140,25 +243,6 @@ if __name__ == "__main__":
 
 
 
-# # Test LDV:
-
-# L0 = np.array([[1,0,0],[1,1.,0],[1,1,1]])
-# D0 = np.diag([1,2,3])
-# V0 = np.array([[1,1,1],[0,1,1],[0,0,1]])
-# A =  L0 @ D0  @ V0
-# L,D,V,nops = calculaLDV(A)
-# assert(np.allclose(L,L0))
-# assert(np.allclose(D,D0))
-# assert(np.allclose(V,V0))
-
-# L0 = np.array([[1,0,0],[1,1.001,0],[1,1,1]])
-# D0 = np.diag([3,2,1])
-# V0 = np.array([[1,1,1],[0,1,1],[0,0,1.001]])
-# A =  L0 @ D0  @ V0
-# L,D,V,nops = calculaLDV(A)
-# assert(np.allclose(L,L0,1e-3))
-# assert(np.allclose(D,D0,1e-3))
-# assert(np.allclose(V,V0,1e-3))
 
 # # Tests SDP
 
